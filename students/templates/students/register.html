@@ -1,0 +1,25 @@
+{% extends 'students/auth_base.html' %}
+{% block title %}Register{% endblock %}
+{% block card %}
+  <div class="eyebrow">Admin Portal</div>
+  <h1>Register</h1>
+  <p class="sub">Create an admin account.</p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+        {% if field.help_text %}<div class="helptext">{{ field.help_text|safe }}</div>{% endif %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">
+      Create account
+      <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </form>
+
+  <p class="auth-foot">Already have an account? <a href="{% url 'login' %}">Back to login</a></p>
+{% endblock %}

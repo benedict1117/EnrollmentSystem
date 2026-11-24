@@ -1,0 +1,32 @@
+{% extends 'students/auth_base.html' %}
+{% block title %}Admin Login{% endblock %}
+{% block card %}
+  <div class="eyebrow">Admin Portal</div>
+  <h1>Admin Login</h1>
+  <p class="sub">Sign in to view the student profiles.</p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.errors %}
+      <p class="form-error">Wrong username or password. Please try again.</p>
+    {% endif %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <div class="field">
+      <label for="id_username">Username</label>
+      <input type="text" name="username" id="id_username" placeholder="Enter your username" autocomplete="username" autofocus required>
+    </div>
+    <div class="field">
+      <label for="id_password">Password</label>
+      <input type="password" name="password" id="id_password" placeholder="Enter your password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn btn-primary">
+      Login
+      <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </form>
+
+  <div class="divider">or</div>
+  <a class="btn btn-outline" href="{% url 'demo_login' %}">Login as admin (skip registration)</a>
+
+  <p class="auth-foot">No account yet? <a href="{% url 'register' %}">Register as admin</a></p>
+{% endblock %}

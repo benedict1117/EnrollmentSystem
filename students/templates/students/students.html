@@ -1,0 +1,177 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Students · Enrollment System</title>
+  <link rel="stylesheet" href="{% static 'students/style.css' %}">
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 40 40"><circle cx="20" cy="14" r="6.5" fill="#6b7280"/><path d="M6 40c0-9 6.5-15 14-15s14 6 14 15z" fill="#6b7280"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Student Profiles</div>
+        <div class="brand-sub">Enrollment system</div>
+      </div>
+    </div>
+
+    <p class="nav-label">Workspace</p>
+    <a class="nav-link active" href="{% url 'students' %}">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.4c2.2.6 3.5 2.4 3.5 5.1"/></svg>
+      Students
+    </a>
+
+    <div class="sidebar-foot">
+      <div class="signed"><small>Signed in as</small><strong>{{ request.user.username }}</strong></div>
+      <a class="signout" href="{% url 'logout' %}">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/></svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs">Workspace <span>/</span> <b>Students</b></div>
+      {% if request.user.is_staff %}
+        <a class="admin-pill" href="{% url 'admin:students_student_changelist' %}" title="Add or edit students">Admin</a>
+      {% else %}
+        <div class="admin-pill">Admin</div>
+      {% endif %}
+    </header>
+
+    <div class="content">
+      <div class="title-row">
+        <h1>Students</h1>
+        <span class="count">{{ shown }} of {{ total }}</span>
+      </div>
+      <p class="lead">Find a student to view their profile.</p>
+
+      <form class="searchbar" method="get">
+        {% if selected %}<input type="hidden" name="id" value="{{ selected.pk }}">{% endif %}
+        <div class="search-input">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="text" name="q" value="{{ f.q }}" placeholder="Search name or student no.">
+        </div>
+        <select name="year" aria-label="Year level">
+          <option value="">All years</option>
+          {% for value, label in year_choices %}
+            <option value="{{ value }}" {% if f.year == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="section" aria-label="Section">
+          <option value="">All sections</option>
+          {% for s in sections %}
+            <option value="{{ s }}" {% if f.section == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Search</button>
+      </form>
+
+      <div class="split">
+        <section>
+          <p class="list-label">All students</p>
+
+          {% for s in students %}
+            <a class="student-card {% if selected and selected.pk == s.pk %}active{% endif %}"
+               href="?id={{ s.pk }}{% if qs %}&amp;{{ qs }}{% endif %}">
+              <div class="avatar tone-{{ s.tone }}">{{ s.initials }}</div>
+              <div class="meta">
+                <div class="name">{{ s.full_name }}</div>
+                <div class="line">{{ s.list_line }}</div>
+              </div>
+              <svg class="icon arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          {% empty %}
+            <div class="none">
+              {% if total %}No students match your search.{% else %}No students yet. Add them in the Django admin.{% endif %}
+            </div>
+          {% endfor %}
+
+          <p class="hint">Choose a name to open their student information.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div class="left">
+              <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="2.8"/><path d="M7 18c.6-2.4 2.5-3.6 5-3.6s4.4 1.2 5 3.6"/></svg>
+              Student profile
+            </div>
+            <div class="right">{% if selected %}{{ selected.student_number }}{% else %}No selection{% endif %}</div>
+          </div>
+
+          {% if selected %}
+            <div class="profile-top">
+              <div class="avatar xl tone-0">{{ selected.initials }}</div>
+              <div class="who">
+                <h2>{{ selected.full_name }}</h2>
+                <p>{{ selected.program_code }} · {{ selected.get_year_level_display }} · Section {{ selected.section }}</p>
+              </div>
+              <span class="badge {{ selected.status|slugify }}">{{ selected.status }}</span>
+            </div>
+
+            <div class="group">
+              <h3>Academic information</h3>
+              <div class="grid">
+                {% include 'students/_item.html' with label="Student number" value=selected.student_number %}
+                {% include 'students/_item.html' with label="Year & section" value=selected.year_and_section %}
+                {% include 'students/_item.html' with label="Program" value=selected.program_display %}
+                {% include 'students/_item.html' with label="Academic year" value=selected.academic_year %}
+              </div>
+            </div>
+
+            <div class="group">
+              <h3>Personal &amp; contact information</h3>
+              <div class="grid">
+                {% include 'students/_item.html' with label="Email address" value=selected.email %}
+                {% include 'students/_item.html' with label="Date of birth" value=selected.birth_date|date:"j F Y" %}
+                {% include 'students/_item.html' with label="City / province" value=selected.city_province %}
+                {% include 'students/_item.html' with label="Preferred name" value=selected.display_preferred %}
+                {% include 'students/_item.html' with label="Mobile number" value=selected.phone %}
+                {% include 'students/_item.html' with label="Home address" value=selected.address %}
+              </div>
+            </div>
+
+            <div class="group">
+              <h3>Family background</h3>
+              <div class="grid">
+                {% include 'students/_item.html' with label="Father's name" value=selected.father_name %}
+                {% include 'students/_item.html' with label="Mother's maiden name" value=selected.mother_name %}
+                {% include 'students/_item.html' with label="Guardian / emergency contact" value=selected.guardian_name %}
+                {% include 'students/_item.html' with label="Relationship" value=selected.guardian_relationship %}
+                {% include 'students/_item.html' with label="Guardian contact number" value=selected.guardian_contact %}
+              </div>
+            </div>
+
+            <div class="group">
+              <h3>Educational background</h3>
+              <div class="grid">
+                {% include 'students/_item.html' with label="Elementary school" value=selected.elementary_school %}
+                {% include 'students/_item.html' with label="Year graduated" value=selected.elementary_year %}
+                {% include 'students/_item.html' with label="High school" value=selected.high_school %}
+                {% include 'students/_item.html' with label="Year graduated" value=selected.high_school_year %}
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <div>
+                <div class="empty-ico">
+                  <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="2.8"/><path d="M7 18c.6-2.4 2.5-3.6 5-3.6s4.4 1.2 5 3.6"/></svg>
+                </div>
+                <h2>Select a student</h2>
+                <p>Click a student on the left to see their information.</p>
+              </div>
+            </div>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
